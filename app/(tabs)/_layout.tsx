@@ -1,5 +1,7 @@
 import { Tabs } from 'expo-router';
+import { View } from 'react-native';
 import { Home, Pill, FolderLock, UtensilsCrossed } from 'lucide-react-native';
+import ChatBot from '@/components/ChatBot';
 
 export default function TabLayout() {
   return (
@@ -53,7 +55,6 @@ export default function TabLayout() {
           ),
         }}
       />
-     
     </Tabs>
   );
 }

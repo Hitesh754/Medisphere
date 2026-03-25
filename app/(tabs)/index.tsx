@@ -5,9 +5,11 @@ import {
   ScrollView,
   TouchableOpacity,
 } from 'react-native';
+import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { Bell, Plus, Clock, TrendingUp } from 'lucide-react-native';
 import { mockUser, mockMedications, mockHealthInsights } from '@/constants/mockData';
+<<<<<<< HEAD
 // 1. Swap useRouter for Redirect
 import { Redirect } from 'expo-router';
 import { isSignupCompleted } from '@/constants/signupFlow';
@@ -19,6 +21,12 @@ export default function HomeScreen() {
     return <Redirect href="/(auth)/signup" />;
   }
 
+=======
+import ChatBot from '@/components/ChatBot';
+
+export default function HomeScreen() {
+  const router = useRouter();
+>>>>>>> 9d84b2c8d90ec3917b4ba62e9f244763c1d6829d
   const currentTime = new Date().getHours();
   const greeting =
     currentTime < 12
@@ -49,12 +57,20 @@ export default function HomeScreen() {
         <View style={styles.quickActionsContainer}>
           <Text style={styles.sectionTitle}>Quick Actions</Text>
           <View style={styles.quickActions}>
-            <TouchableOpacity style={styles.actionButton}>
-              <View style={styles.actionIconContainer}>
-                <Plus size={24} color="#2563EB" />
-              </View>
-              <Text style={styles.actionText}>Scan Prescription</Text>
-            </TouchableOpacity>
+            <TouchableOpacity 
+  onPress={() => router.push('/(tabs)/prescriptions')}
+  style={{
+    backgroundColor: '#2563EB',
+    padding: 16,
+    borderRadius: 14,
+    alignItems: 'center',
+    margin: 16,
+  }}
+>
+  <Text style={{ color: '#fff', fontWeight: '600', fontSize: 16 }}>
+    📋 Scan Prescription
+  </Text>
+</TouchableOpacity>
             <TouchableOpacity style={styles.actionButton}>
               <View style={styles.actionIconContainer}>
                 <Plus size={24} color="#10B981" />
@@ -113,9 +129,9 @@ export default function HomeScreen() {
         </View>
       </ScrollView>
 
-      <TouchableOpacity style={styles.fab}>
-        <Plus size={28} color="#FFFFFF" strokeWidth={2.5} />
-      </TouchableOpacity>
+      {/* <TouchableOpacity style={styles.fab}>
+        <ChatBot />
+      </TouchableOpacity> */}
     </View>
   );
 }
