@@ -8,8 +8,17 @@ import {
 import { StatusBar } from 'expo-status-bar';
 import { Bell, Plus, Clock, TrendingUp } from 'lucide-react-native';
 import { mockUser, mockMedications, mockHealthInsights } from '@/constants/mockData';
+// 1. Swap useRouter for Redirect
+import { Redirect } from 'expo-router';
+import { isSignupCompleted } from '@/constants/signupFlow';
 
 export default function HomeScreen() {
+  // 2. Use the Redirect component directly instead of useEffect
+  if (!isSignupCompleted()) {
+    // Make sure '/signup' matches your actual route path (e.g., '/(auth)/signup' if you used route groups)
+    return <Redirect href="/(auth)/signup" />;
+  }
+
   const currentTime = new Date().getHours();
   const greeting =
     currentTime < 12
