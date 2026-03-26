@@ -5,7 +5,11 @@
   "tsx": true,
   "tailwind": {
     "config": "tailwind.config.ts",
+<<<<<<< HEAD
     "css": "globals.css",
+=======
+    "css": "src/index.css",
+>>>>>>> 1508e1f (haven't connected supabase)
     "baseColor": "neutral",
     "cssVariables": true,
     "prefix": ""

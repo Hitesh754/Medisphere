@@ -17,6 +17,10 @@
     "@react-navigation/bottom-tabs": "^7.2.0",
     "@react-navigation/native": "^7.0.14",
     "@supabase/supabase-js": "^2.58.0",
+<<<<<<< HEAD
+=======
+    "@tailwindcss/vite": "^4.2.2",
+>>>>>>> 1508e1f (haven't connected supabase)
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "expo": "~54.0.33",
