@@ -41,7 +41,7 @@ scheduler.start()
 app.config["JWT_COOKIE_SECURE"] = False
 app.config["JWT_TOKEN_LOCATION"] = ["headers"]
 app.config["JWT_SECRET_KEY"] = "super-secret"  # Change this in your code!
-app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(minutes=30)
+app.config["JWT_ACCESS_TOKEN_EXPIRES"] = datetime.timedelta(minutes=30)
 
 jwt = JWTManager(app)
 
@@ -54,6 +54,9 @@ app.config["UPLOAD_FOLDER_PFP"] = upload_folder_pfp
 upload_folder_prescriptions = "images/prescriptions"
 app.config["UPLOAD_FOLDER_prescriptions"] = upload_folder_prescriptions
 
+os.makedirs(upload_folder_pfp, exist_ok=True)
+os.makedirs(upload_folder_prescriptions, exist_ok=True)
+
 db.init_app(app)
 app.app_context().push()
 
@@ -62,6 +65,8 @@ salt = bcrypt.gensalt()
 
 ######################
 from flask_mail import Mail, Message
+from ml_model.ner import InitiateNER
+from ml_model.ml_model import detect_text, detect_text_local
 
 app.config.update(dict(
     DEBUG = True,
@@ -74,6 +79,67 @@ app.config.update(dict(
 ))
 
 mail= Mail(app)
+
+ner_model_instance = None
+
+
+def get_ner_model():
+    global ner_model_instance
+    if ner_model_instance is None:
+        model_path = os.environ.get(
+            "NER_MODEL_PATH",
+            os.path.join(curr_dir, "content", "model"),
+        )
+        model = InitiateNER()
+        model.load_model(model_path)
+        ner_model_instance = model
+    return ner_model_instance
+
+
+def normalize_ner_output(prediction):
+    def _extract_values(entity_list):
+        values = []
+        for item in entity_list or []:
+            if isinstance(item, tuple) and len(item) > 0:
+                values.append(str(item[0]))
+            else:
+                values.append(str(item))
+        return values
+
+    return {
+        "Medicine": _extract_values(prediction.get("Medicine", [])),
+        "Dosage": _extract_values(prediction.get("Dosage", [])),
+        "Frequency": _extract_values(prediction.get("Frequency", [])),
+        "Duration": _extract_values(prediction.get("Duration", [])),
+        "Advice": _extract_values(prediction.get("Advice", [])),
+        "Name": _extract_values(prediction.get("Name", [])),
+    }
+
+
+def run_inference_on_image(image_path):
+    region = os.environ.get("AWS_REGION", "ap-south-1")
+    aws_access_key_id = os.environ.get("AWS_ACCESS_KEY_ID")
+    aws_secret_access_key = os.environ.get("AWS_SECRET_ACCESS_KEY")
+
+    if aws_access_key_id and aws_secret_access_key:
+        extracted_text = detect_text(
+            image_path,
+            region,
+            aws_access_key_id,
+            aws_secret_access_key,
+        )
+    else:
+        extracted_text = detect_text_local(image_path)
+
+    if not extracted_text or str(extracted_text).startswith("Error:"):
+        raise ValueError(f"OCR failed: {extracted_text}")
+
+    model = get_ner_model()
+    prediction = model.predict(extracted_text)
+    if isinstance(prediction, dict) and prediction.get("error"):
+        raise ValueError(f"NER failed: {prediction['error']}")
+
+    return normalize_ner_output(prediction)
 
 def send_mail(message, mail_id):
     with app.app_context():
@@ -162,15 +228,45 @@ class PrescriptionUpload(Resource):
     @jwt_required()
     def post(self):
         email = request.form['email']
-        pic_name = request.form['pic_name']
+        pic_name = request.form.get('pic_name')
+        image = request.files.get('file')
+
+        if image:
+            original_name = secure_filename(image.filename or 'prescription.jpg')
+            pic_name = str(uuid.uuid1()) + "_" + original_name
+            image.save(os.path.join(app.config['UPLOAD_FOLDER_prescriptions'], pic_name))
+
+        if not pic_name:
+            return make_response(jsonify({"error": "Missing prescription image"}), 400)
 
         q = Prescription(prescription_name=pic_name, user_email=email)
         db.session.add(q)
         db.session.commit()
 
-        # x = (ner_model.predict(detect_text(os.path.join(app.config['UPLOAD_FOLDER_prescriptions'], pic_name))))
-        # return json.dumps(x)
-        return jsonify({"Medicine": ["Paracetamol", "Amoxicillin"], "Dosage": ["500mg", "250mg"]})
+        try:
+            image_path = os.path.join(app.config['UPLOAD_FOLDER_prescriptions'], pic_name)
+            output = run_inference_on_image(image_path)
+            return jsonify(output)
+        except Exception as e:
+            return make_response(jsonify({"error": str(e)}), 500)
+
+
+class AnalyzePrescription(Resource):
+    def post(self):
+        image = request.files.get('file') or request.files.get('prescription')
+        if image is None:
+            return make_response(jsonify({"error": "No image file provided"}), 400)
+
+        original_name = secure_filename(image.filename or 'prescription.jpg')
+        pic_name = str(uuid.uuid1()) + "_" + original_name
+        image_path = os.path.join(app.config['UPLOAD_FOLDER_prescriptions'], pic_name)
+        image.save(image_path)
+
+        try:
+            output = run_inference_on_image(image_path)
+            return jsonify(output)
+        except Exception as e:
+            return make_response(jsonify({"error": str(e)}), 500)
 
 class Dashboard(Resource):
     @jwt_required()
@@ -245,7 +341,8 @@ class SendMail(Resource):
 class Scan(Resource):
     def post(self):
         file_path = request.form['path']
-        x = (ner_model.predict(detect_text(file_path)))
+        model = get_ner_model()
+        x = model.predict(detect_text(file_path))
 
         return json.dumps(x)
 
@@ -257,6 +354,7 @@ class Schedule(Resource):
 api.add_resource(Login, "/login")
 api.add_resource(SignUp, "/signup")
 api.add_resource(PrescriptionUpload, "/dashboard/upload_prescription")
+api.add_resource(AnalyzePrescription, "/analyze-prescription")
 api.add_resource(Dashboard, "/dashboard")
 api.add_resource(ViewPrescription, "/dashboard/view")
 api.add_resource(DeletePrescription, "/dashboard/delete")
@@ -270,4 +368,4 @@ if __name__=="__main__":
     
     # ner_model = InitiateNER()
     # ner_model.load_model("./content/model")
-    app.run(debug=True)
+    app.run(host="0.0.0.0", port=5000, debug=True)

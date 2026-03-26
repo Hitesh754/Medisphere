@@ -7,8 +7,6 @@ from sparknlp.base import DocumentAssembler
 import logging
 from pyspark.sql import functions as F
 
-from ml_model import detect_text
-
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -117,8 +115,7 @@ class InitiateNER:
             )
         return result_dict
     
-ner_model = InitiateNER()
-# ner_model.train_model("../content/NERDataset.txt", "../content/model")
-
-ner_model.load_model("../content/model")
-print(ner_model.predict(detect_text("../images/prescriptions/check2.jpeg")))
+if __name__ == "__main__":
+    # Keep this module import-safe for Flask app startup.
+    ner_model = InitiateNER()
+    ner_model.load_model("../content/model")

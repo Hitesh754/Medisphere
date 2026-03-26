@@ -1,215 +1,433 @@
-// import { useState, useRef } from "react";
-// import { Camera, Image as ImageIcon, Loader2, Pill, Clock, AlertTriangle, CheckCircle2 } from "lucide-react";
-// import { Button } from "@/components/ui/button";
-// import { toast } from "sonner";
-// import { supabase } from "./components/integrations/supabase/client";
+import { useMemo, useState } from 'react';
+import {
+  ActivityIndicator,
+  Image,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import { StatusBar } from 'expo-status-bar';
+import * as ImagePicker from 'expo-image-picker';
+import Constants from 'expo-constants';
+import { Platform } from 'react-native';
+import type { ImagePickerAsset } from 'expo-image-picker';
+import { isSupabaseConfigured, supabase } from '@/components/integrations/supabase/client';
 
-// interface MedicineResult {
-//   name: string;
-//   dosage: string;
-//   frequency: string;
-//   duration: string;
-//   advisory: string;
-// }
+type AnalyzerResponse = {
+  Medicine?: string[];
+  Dosage?: string[];
+  Frequency?: string[];
+  Duration?: string[];
+  Advice?: string[];
+  Name?: string[];
+  error?: string;
+};
 
-// interface ScanResponse {
-//   medicines: MedicineResult[];
-//   generalAdvice: string;
-//   error?: string;
-// }
+type SupabaseScanMedicine = {
+  name?: string;
+  dosage?: string;
+  frequency?: string;
+  duration?: string;
+  advisory?: string;
+};
 
-// function fileToBase64(file: File): Promise<string> {
-//   return new Promise((resolve, reject) => {
-//     const reader = new FileReader();
-//     reader.onload = () => {
-//       const result = reader.result as string;
-//       // Remove the data:image/...;base64, prefix
-//       const base64 = result.split(",")[1];
-//       resolve(base64);
-//     };
-//     reader.onerror = reject;
-//     reader.readAsDataURL(file);
-//   });
-// }
+type SupabaseScanResponse = {
+  medicines?: SupabaseScanMedicine[];
+  generalAdvice?: string;
+  error?: string;
+};
 
-// export default function PrescriptionsPage() {
-//   const [loading, setLoading] = useState(false);
-//   const [results, setResults] = useState<ScanResponse | null>(null);
-//   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-//   const fileInputRef = useRef<HTMLInputElement>(null);
-//   const cameraInputRef = useRef<HTMLInputElement>(null);
+function resolveApiBaseUrl() {
+  const fromEnv = process.env.EXPO_PUBLIC_ANALYZER_API_URL || process.env.EXPO_PUBLIC_API_URL;
+  if (fromEnv) {
+    return fromEnv.replace(/\/$/, '');
+  }
 
-//   const handleFile = async (file: File) => {
-//     const url = URL.createObjectURL(file);
-//     setPreviewUrl(url);
-//     setLoading(true);
-//     setResults(null);
+  // In Expo Go on a physical device, derive your laptop IP from hostUri.
+  const hostUri = Constants.expoConfig?.hostUri;
+  if (hostUri) {
+    const host = hostUri.split(':')[0];
+    if (host) {
+      return `http://${host}:5000`;
+    }
+  }
 
-//     try {
-//       const imageBase64 = await fileToBase64(file);
+  return Platform.OS === 'android' ? 'http://10.0.2.2:5000' : 'http://127.0.0.1:5000';
+}
 
-//       const { data, error } = await supabase.functions.invoke("scan-prescription", {
-//         body: { imageBase64, mimeType: file.type },
-//       });
+const API_BASE_URL = resolveApiBaseUrl();
 
-//       if (error) {
-//         throw new Error(error.message || "Failed to scan prescription");
-//       }
+function blobToBase64(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const result = reader.result;
+      if (typeof result !== 'string') {
+        reject(new Error('Failed to convert image to base64.'));
+        return;
+      }
+      const base64 = result.split(',')[1] || '';
+      resolve(base64);
+    };
+    reader.onerror = () => reject(new Error('Failed to read image data.'));
+    reader.readAsDataURL(blob);
+  });
+}
 
-//       if (data?.error) {
-//         throw new Error(data.error);
-//       }
+function mapSupabaseResultToAnalyzerResponse(data: SupabaseScanResponse): AnalyzerResponse {
+  const medicines = data.medicines || [];
+  return {
+    Medicine: medicines.map((m) => m.name || '').filter(Boolean),
+    Dosage: medicines.map((m) => m.dosage || '').filter(Boolean),
+    Frequency: medicines.map((m) => m.frequency || '').filter(Boolean),
+    Duration: medicines.map((m) => m.duration || '').filter(Boolean),
+    Advice: medicines.map((m) => m.advisory || '').filter(Boolean),
+    Name: [],
+  };
+}
 
-//       setResults(data as ScanResponse);
-//       toast.success(`Found ${data.medicines?.length || 0} medicine(s) in your prescription!`);
-//     } catch (e: any) {
-//       console.error("Scan error:", e);
-//       toast.error(e.message || "Failed to scan prescription. Please try again.");
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
+export default function PrescriptionsScreen() {
+  const [imageUri, setImageUri] = useState<string | null>(null);
+  const [selectedAsset, setSelectedAsset] = useState<ImagePickerAsset | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [result, setResult] = useState<AnalyzerResponse | null>(null);
 
-//   const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-//     const file = e.target.files?.[0];
-//     if (file) handleFile(file);
-//   };
+  const medicines = result?.Medicine ?? [];
+  const dosages = result?.Dosage ?? [];
+  const frequencies = result?.Frequency ?? [];
+  const durations = result?.Duration ?? [];
+  const advices = result?.Advice ?? [];
+  const patientNames = result?.Name ?? [];
 
-//   return (
-//     <div className="px-5 pt-12 pb-6 space-y-6">
-//       <div>
-//         <h1 className="text-2xl font-bold text-foreground">Scan Prescription</h1>
-//         <p className="text-sm text-muted-foreground mt-1">
-//           Upload or capture a prescription image to extract medicine details
-//         </p>
-//       </div>
+  const hasResult = useMemo(() => {
+    return (
+      medicines.length > 0 ||
+      dosages.length > 0 ||
+      frequencies.length > 0 ||
+      durations.length > 0 ||
+      advices.length > 0 ||
+      patientNames.length > 0
+    );
+  }, [advices.length, dosages.length, durations.length, frequencies.length, medicines.length, patientNames.length]);
 
-//       {/* Upload Area */}
-//       {!previewUrl && !loading && (
-//         <div className="glass-card rounded-2xl p-8 text-center space-y-4 border-2 border-dashed border-primary/20">
-//           <div className="w-16 h-16 rounded-2xl gradient-primary mx-auto flex items-center justify-center">
-//             <Pill size={28} className="text-primary-foreground" />
-//           </div>
-//           <div>
-//             <p className="font-semibold text-foreground">Upload Prescription</p>
-//             <p className="text-sm text-muted-foreground mt-1">Take a photo or choose from gallery</p>
-//           </div>
-//           <div className="flex gap-3 justify-center">
-//             <Button variant="hero" onClick={() => cameraInputRef.current?.click()}>
-//               <Camera size={18} />
-//               Camera
-//             </Button>
-//             <Button variant="outline" onClick={() => fileInputRef.current?.click()}>
-//               <ImageIcon size={18} />
-//               Gallery
-//             </Button>
-//           </div>
-//         </div>
-//       )}
+  const pickImage = async () => {
+    setError(null);
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permission.granted) {
+      setError('Media permission is required to upload prescription.');
+      return;
+    }
 
-//       <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={onFileChange} />
-//       <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={onFileChange} />
+    const picked = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      quality: 1,
+      allowsEditing: true,
+    });
 
-//       {/* Image Preview */}
-//       {previewUrl && (
-//         <div className="glass-card rounded-2xl overflow-hidden">
-//           <img src={previewUrl} alt="Prescription" className="w-full h-48 object-cover" />
-//           {loading && (
-//             <div className="p-4 flex items-center justify-center gap-2 text-primary">
-//               <Loader2 size={20} className="animate-spin" />
-//               <span className="text-sm font-semibold">Analyzing prescription with AI...</span>
-//             </div>
-//           )}
-//         </div>
-//       )}
+    if (picked.canceled || !picked.assets.length) {
+      return;
+    }
 
-//       {/* Results */}
-//       {results && results.medicines && results.medicines.length > 0 && (
-//         <div className="space-y-4 animate-slide-up">
-//           <div className="flex items-center gap-2">
-//             <CheckCircle2 size={20} className="text-success" />
-//             <h2 className="text-base font-bold text-foreground">
-//               {results.medicines.length} Medicine{results.medicines.length > 1 ? "s" : ""} Found
-//             </h2>
-//           </div>
+    const asset = picked.assets[0];
+    setSelectedAsset(asset);
+    setImageUri(asset.uri);
+    setResult(null);
+  };
 
-//           {results.medicines.map((med, i) => (
-//             <div key={i} className="glass-card rounded-xl p-4 space-y-3">
-//               <div className="flex items-start gap-3">
-//                 <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center shrink-0">
-//                   <Pill size={18} className="text-primary-foreground" />
-//                 </div>
-//                 <div className="flex-1">
-//                   <h3 className="font-bold text-foreground">{med.name}</h3>
-//                   <span className="text-sm text-primary font-semibold">{med.dosage}</span>
-//                 </div>
-//               </div>
+  const analyze = async () => {
+    if (!imageUri || !selectedAsset) {
+      setError('Please select a prescription image first.');
+      return;
+    }
 
-//               <div className="grid grid-cols-2 gap-2">
-//                 <div className="bg-muted rounded-lg p-2.5">
-//                   <div className="flex items-center gap-1.5 mb-1">
-//                     <Clock size={12} className="text-muted-foreground" />
-//                     <span className="text-[10px] text-muted-foreground font-semibold uppercase">Frequency</span>
-//                   </div>
-//                   <p className="text-xs font-semibold text-foreground">{med.frequency}</p>
-//                 </div>
-//                 <div className="bg-muted rounded-lg p-2.5">
-//                   <div className="flex items-center gap-1.5 mb-1">
-//                     <Clock size={12} className="text-muted-foreground" />
-//                     <span className="text-[10px] text-muted-foreground font-semibold uppercase">Duration</span>
-//                   </div>
-//                   <p className="text-xs font-semibold text-foreground">{med.duration}</p>
-//                 </div>
-//               </div>
+    try {
+      setLoading(true);
+      setError(null);
+      setResult(null);
 
-//               <div className="bg-warning/5 border border-warning/20 rounded-lg p-3 flex gap-2">
-//                 <AlertTriangle size={16} className="text-warning shrink-0 mt-0.5" />
-//                 <p className="text-xs text-foreground/80 leading-relaxed">{med.advisory}</p>
-//               </div>
-//             </div>
-//           ))}
+      const filename = selectedAsset.fileName || imageUri.split('/').pop() || 'prescription.jpg';
+      const mimeType = selectedAsset.mimeType || 'image/jpeg';
 
-//           {/* General Advisory */}
-//           {results.generalAdvice && (
-//             <div className="gradient-accent rounded-xl p-4 space-y-2">
-//               <p className="font-bold text-accent-foreground text-sm">⚕️ General Advisory</p>
-//               <p className="text-xs text-accent-foreground/90 leading-relaxed">{results.generalAdvice}</p>
-//             </div>
-//           )}
+      // Preferred path: Supabase edge function (Lovable gateway), no AWS required.
+      if (isSupabaseConfigured) {
+        const fileResponse = await fetch(imageUri);
+        const blob = await fileResponse.blob();
+        const imageBase64 = await blobToBase64(blob);
 
-//           <Button
-//             variant="outline"
-//             className="w-full"
-//             onClick={() => {
-//               setResults(null);
-//               setPreviewUrl(null);
-//             }}
-//           >
-//             Scan Another Prescription
-//           </Button>
-//         </div>
-//       )}
+        const { data, error: functionError } = await supabase.functions.invoke('scan-prescription', {
+          body: { imageBase64, mimeType },
+        });
 
-//       {/* No medicines found */}
-//       {results && (!results.medicines || results.medicines.length === 0) && (
-//         <div className="glass-card rounded-xl p-6 text-center space-y-2 animate-fade-in">
-//           <AlertTriangle size={32} className="mx-auto text-warning" />
-//           <p className="font-semibold text-foreground">No medicines detected</p>
-//           <p className="text-sm text-muted-foreground">
-//             {results.generalAdvice || "Please try uploading a clearer image of the prescription."}
-//           </p>
-//           <Button
-//             variant="outline"
-//             className="mt-3"
-//             onClick={() => {
-//               setResults(null);
-//               setPreviewUrl(null);
-//             }}
-//           >
-//             Try Again
-//           </Button>
-//         </div>
-//       )}
-//     </div>
-//   );
-// }
+        const supabaseData = data as SupabaseScanResponse | null;
+        if (functionError) {
+          throw new Error(functionError.message || 'Supabase scan failed.');
+        }
+
+        if (!supabaseData) {
+          throw new Error('Empty response from prescription scanner.');
+        }
+
+        if (supabaseData.error) {
+          throw new Error(supabaseData.error);
+        }
+
+        setResult(mapSupabaseResultToAnalyzerResponse(supabaseData));
+        return;
+      }
+
+      // Fallback path: local Flask analyzer API.
+      const formData = new FormData();
+      if (Platform.OS === 'web') {
+        const webFileResponse = await fetch(imageUri);
+        const blob = await webFileResponse.blob();
+        formData.append('file', blob, filename);
+      } else {
+        formData.append('file', {
+          uri: imageUri,
+          name: filename,
+          type: mimeType,
+        } as any);
+      }
+
+      const response = await fetch(`${API_BASE_URL}/analyze-prescription`, {
+        method: 'POST',
+        headers: {
+          Accept: 'application/json',
+        },
+        body: formData,
+      });
+
+      const json = (await response.json()) as AnalyzerResponse;
+      if (!response.ok || json.error) {
+        throw new Error(json.error || 'Failed to analyze prescription.');
+      }
+
+      setResult(json);
+    } catch (e) {
+      if (e instanceof TypeError) {
+        setError(
+          `Unable to reach analyzer at ${API_BASE_URL}. Ensure backend is running and reachable from this device.`
+        );
+      } else {
+        setError(e instanceof Error ? e.message : 'Something went wrong while scanning.');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+      <StatusBar style="dark" />
+      <View style={styles.card}>
+        <Text style={styles.title}>Prescription Analyzer</Text>
+        <Text style={styles.subtitle}>
+          Upload your prescription and extract medicines using your trained backend model.
+        </Text>
+
+        {!imageUri ? (
+          <View style={styles.emptyStateCard}>
+            <Text style={styles.emptyStateTitle}>No image selected</Text>
+            <Text style={styles.emptyStateText}>Pick a clear prescription photo to begin analysis.</Text>
+          </View>
+        ) : null}
+
+        <TouchableOpacity
+          style={[styles.secondaryButton, imageUri ? styles.secondaryButtonCompact : null]}
+          onPress={pickImage}
+          activeOpacity={0.85}>
+          <Text style={styles.secondaryButtonText}>
+            {imageUri ? 'Change Prescription Image' : 'Choose Prescription Image'}
+          </Text>
+        </TouchableOpacity>
+
+        {imageUri ? <Image source={{ uri: imageUri }} style={styles.preview} /> : null}
+
+        {imageUri ? (
+          <TouchableOpacity
+            style={[styles.button, loading && styles.buttonDisabled]}
+            onPress={analyze}
+            disabled={loading}
+            activeOpacity={0.85}>
+            {loading ? (
+              <View style={styles.loadingRow}>
+                <ActivityIndicator color="#FFFFFF" size="small" />
+                <Text style={styles.buttonText}>Analyzing...</Text>
+              </View>
+            ) : (
+              <Text style={styles.buttonText}>Analyze Prescription</Text>
+            )}
+          </TouchableOpacity>
+        ) : null}
+
+        {error ? <Text style={styles.errorText}>{error}</Text> : null}
+
+        {hasResult ? (
+          <View style={styles.resultCard}>
+            <Text style={styles.resultTitle}>Detected Details</Text>
+
+            {patientNames.length > 0 ? (
+              <Text style={styles.resultLine}>Patient: {patientNames.join(', ')}</Text>
+            ) : null}
+
+            {medicines.map((medicine, index) => (
+              <View key={`${medicine}-${index}`} style={styles.medicineRow}>
+                <Text style={styles.medicineName}>{index + 1}. {medicine}</Text>
+                {dosages[index] ? <Text style={styles.metaText}>Dosage: {dosages[index]}</Text> : null}
+                {frequencies[index] ? <Text style={styles.metaText}>Frequency: {frequencies[index]}</Text> : null}
+                {durations[index] ? <Text style={styles.metaText}>Duration: {durations[index]}</Text> : null}
+                {advices[index] ? <Text style={styles.metaText}>Advice: {advices[index]}</Text> : null}
+              </View>
+            ))}
+          </View>
+        ) : null}
+
+        <Text style={styles.helperText}>
+          API URL: {API_BASE_URL}
+        </Text>
+      </View>
+    </ScrollView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    backgroundColor: '#F8FAFC',
+  },
+  content: {
+    padding: 20,
+    paddingTop: 60,
+    paddingBottom: 100,
+  },
+  card: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#0F172A',
+    marginBottom: 8,
+  },
+  subtitle: {
+    fontSize: 14,
+    color: '#475569',
+    lineHeight: 21,
+    marginBottom: 16,
+  },
+  emptyStateCard: {
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1,
+    borderColor: '#CBD5E1',
+    borderStyle: 'dashed',
+    borderRadius: 12,
+    paddingVertical: 18,
+    paddingHorizontal: 14,
+    marginBottom: 12,
+  },
+  emptyStateTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#1E293B',
+    marginBottom: 4,
+  },
+  emptyStateText: {
+    fontSize: 13,
+    color: '#64748B',
+    lineHeight: 18,
+  },
+  secondaryButton: {
+    backgroundColor: '#EEF2FF',
+    borderWidth: 1,
+    borderColor: '#C7D2FE',
+    borderRadius: 12,
+    paddingVertical: 14,
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  secondaryButtonCompact: {
+    marginTop: 2,
+  },
+  secondaryButtonText: {
+    color: '#3730A3',
+    fontSize: 15,
+    fontWeight: '700',
+  },
+  preview: {
+    width: '100%',
+    height: 220,
+    borderRadius: 12,
+    marginBottom: 12,
+    backgroundColor: '#E2E8F0',
+  },
+  button: {
+    backgroundColor: '#2563EB',
+    borderRadius: 12,
+    paddingVertical: 14,
+    alignItems: 'center',
+    marginTop: 2,
+  },
+  buttonDisabled: {
+    opacity: 0.6,
+  },
+  buttonText: {
+    color: '#FFFFFF',
+    fontSize: 15,
+    fontWeight: '700',
+  },
+  loadingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  errorText: {
+    marginTop: 12,
+    color: '#DC2626',
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  resultCard: {
+    marginTop: 16,
+    backgroundColor: '#F8FAFC',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    padding: 12,
+  },
+  resultTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#0F172A',
+    marginBottom: 8,
+  },
+  resultLine: {
+    fontSize: 14,
+    color: '#334155',
+    marginBottom: 8,
+  },
+  medicineRow: {
+    marginBottom: 12,
+  },
+  medicineName: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#1E293B',
+    marginBottom: 4,
+  },
+  metaText: {
+    fontSize: 13,
+    color: '#475569',
+    marginBottom: 2,
+  },
+  helperText: {
+    marginTop: 14,
+    color: '#64748B',
+    fontSize: 12,
+  },
+});

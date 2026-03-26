@@ -8,6 +8,9 @@ declare global {
 
 export function useFrameworkReady() {
   useEffect(() => {
-    window.frameworkReady?.();
+    // Only call on web - window doesn't exist in React Native
+    if (typeof window !== 'undefined') {
+      window.frameworkReady?.();
+    }
   });
 }

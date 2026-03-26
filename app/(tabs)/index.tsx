@@ -7,11 +7,10 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { Bell, Plus, Clock, TrendingUp } from 'lucide-react-native';
+import { Bell, Plus, Clock, TrendingUp, ClipboardList } from 'lucide-react-native';
 import { mockUser, mockMedications, mockHealthInsights } from '@/constants/mockData';
 import { Redirect } from 'expo-router';
 import { isSignupCompleted } from '@/constants/signupFlow';
-import ChatBot from '@/components/ChatBot';
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -49,20 +48,15 @@ export default function HomeScreen() {
         <View style={styles.quickActionsContainer}>
           <Text style={styles.sectionTitle}>Quick Actions</Text>
           <View style={styles.quickActions}>
-            <TouchableOpacity 
-  onPress={() => router.push('/(tabs)/prescriptions')}
-  style={{
-    backgroundColor: '#2563EB',
-    padding: 16,
-    borderRadius: 14,
-    alignItems: 'center',
-    margin: 16,
-  }}
->
-  <Text style={{ color: '#fff', fontWeight: '600', fontSize: 16 }}>
-    📋 Scan Prescription
-  </Text>
-</TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => router.push('/(tabs)/prescriptions')}
+              style={styles.primaryActionButton}
+              activeOpacity={0.85}>
+              <View style={styles.primaryActionIconContainer}>
+                <ClipboardList size={24} color="#FFFFFF" />
+              </View>
+              <Text style={styles.primaryActionText}>Scan Prescription</Text>
+            </TouchableOpacity>
             <TouchableOpacity style={styles.actionButton}>
               <View style={styles.actionIconContainer}>
                 <Plus size={24} color="#10B981" />
@@ -180,6 +174,33 @@ const styles = StyleSheet.create({
   quickActions: {
     flexDirection: 'row',
     gap: 16,
+  },
+  primaryActionButton: {
+    flex: 1,
+    backgroundColor: '#2563EB',
+    borderRadius: 16,
+    padding: 20,
+    alignItems: 'center',
+    shadowColor: '#1D4ED8',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.22,
+    shadowRadius: 12,
+    elevation: 4,
+  },
+  primaryActionIconContainer: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: 'rgba(255,255,255,0.18)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 12,
+  },
+  primaryActionText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    textAlign: 'center',
   },
   actionButton: {
     flex: 1,
