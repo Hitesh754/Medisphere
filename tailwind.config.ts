@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   darkMode: ["class"],
@@ -21,7 +20,6 @@ module.exports = {
   },
   plugins: [require("tailwindcss-animate")],
 }
-=======
 import type { Config } from "tailwindcss";
 
 export default {
@@ -31,4 +29,3 @@ export default {
   },
   plugins: [],
 } satisfies Config;
->>>>>>> 1508e1f (haven't connected supabase)

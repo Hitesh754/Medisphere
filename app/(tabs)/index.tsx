@@ -11,7 +11,7 @@ import { Bell, Plus, Clock, TrendingUp } from 'lucide-react-native';
 import { mockUser, mockMedications, mockHealthInsights } from '@/constants/mockData';
 import { Redirect } from 'expo-router';
 import { isSignupCompleted } from '@/constants/signupFlow';
-import ChatBot from '@/src/components/ChatBot';
+import ChatBot from '@/components/ChatBot';
 
 export default function HomeScreen() {
   const router = useRouter();

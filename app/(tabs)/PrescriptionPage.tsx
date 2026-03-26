@@ -1,8 +1,8 @@
 import { useState, useRef } from "react";
 import { Camera, Image as ImageIcon, Loader2, Pill, Clock, AlertTriangle, CheckCircle2 } from "lucide-react";
-import { Button } from "@/src/components/ui/button";
+import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/components/integrations/supabase/client";
 
 interface MedicineResult {
   name: string;
@@ -95,7 +95,7 @@ export default function PrescriptionsPage() {
             <p className="text-sm text-muted-foreground mt-1">Take a photo or choose from gallery</p>
           </div>
           <div className="flex gap-3 justify-center">
-            <Button variant="hero" onClick={() => cameraInputRef.current?.click()}>
+            <Button variant="default" onClick={() => cameraInputRef.current?.click()}>
               <Camera size={18} />
               Camera
             </Button>
