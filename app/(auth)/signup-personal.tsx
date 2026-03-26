@@ -22,9 +22,9 @@ export default function SignupPersonalScreen() {
     lastName?: string;
     email?: string;
     phone?: string;
+    aadhaarNumber?: string;
   }>();
 
-  const [aadhaarNumber, setAadhaarNumber] = useState('');
   const [gender, setGender] = useState('');
   const [weight, setWeight] = useState('');
   const [height, setHeight] = useState('');
@@ -33,9 +33,6 @@ export default function SignupPersonalScreen() {
   const validateStepTwo = () => {
     const nextErrors: Record<string, string> = {};
 
-    if (!/^\d{12}$/.test(aadhaarNumber)) {
-      nextErrors.aadhaarNumber = 'Aadhaar number must be 12 digits';
-    }
     if (!gender) {
       nextErrors.gender = 'Please select gender';
     }
@@ -88,21 +85,6 @@ export default function SignupPersonalScreen() {
             {params.firstName ? `Hi ${params.firstName},` : 'Almost done,'} complete
             your profile.
           </Text>
-
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Aadhaar Card Number</Text>
-            <TextInput
-              placeholder="Enter 12-digit Aadhaar number"
-              placeholderTextColor="#94A3B8"
-              keyboardType="number-pad"
-              value={aadhaarNumber}
-              onChangeText={(value) => setAadhaarNumber(value.replace(/\D/g, '').slice(0, 12))}
-              style={[styles.input, errors.aadhaarNumber ? styles.inputError : null]}
-            />
-            {errors.aadhaarNumber ? (
-              <Text style={styles.errorText}>{errors.aadhaarNumber}</Text>
-            ) : null}
-          </View>
 
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Gender</Text>
@@ -163,6 +145,7 @@ export default function SignupPersonalScreen() {
             </Text>
             <Text style={styles.summaryText}>Email: {params.email ?? '-'}</Text>
             <Text style={styles.summaryText}>Phone: {params.phone ?? '-'}</Text>
+            <Text style={styles.summaryText}>Aadhaar: {params.aadhaarNumber ?? '-'}</Text>
           </View>
 
           <TouchableOpacity style={styles.primaryButton} onPress={handleFinish}>

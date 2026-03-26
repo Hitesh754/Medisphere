@@ -26,6 +26,7 @@ export default function SignupScreen() {
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
+  const [aadhaarNumber, setAadhaarNumber] = useState('');
   const [countryCode, setCountryCode] = useState(COUNTRY_CODES[0]);
   const [showCountryOptions, setShowCountryOptions] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -49,6 +50,9 @@ export default function SignupScreen() {
     } else if (!/^\d{7,15}$/.test(phoneNumber)) {
       nextErrors.phoneNumber = 'Enter a valid phone number';
     }
+    if (!/^\d{12}$/.test(aadhaarNumber)) {
+      nextErrors.aadhaarNumber = 'Aadhaar number must be 12 digits';
+    }
 
     setErrors(nextErrors);
     return Object.keys(nextErrors).length === 0;
@@ -66,6 +70,7 @@ export default function SignupScreen() {
         lastName: lastName.trim(),
         email: email.trim(),
         phone: `${countryCode.code}${phoneNumber.trim()}`,
+        aadhaarNumber: aadhaarNumber.trim(),
       },
     });
   };
@@ -178,6 +183,23 @@ export default function SignupScreen() {
             </View>
             {errors.phoneNumber ? (
               <Text style={styles.errorText}>{errors.phoneNumber}</Text>
+            ) : null}
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Aadhaar Card Number</Text>
+            <TextInput
+              placeholder="Enter 12-digit Aadhaar number"
+              placeholderTextColor="#94A3B8"
+              keyboardType="number-pad"
+              value={aadhaarNumber}
+              onChangeText={(value) =>
+                setAadhaarNumber(value.replace(/\D/g, '').slice(0, 12))
+              }
+              style={[styles.input, errors.aadhaarNumber ? styles.inputError : null]}
+            />
+            {errors.aadhaarNumber ? (
+              <Text style={styles.errorText}>{errors.aadhaarNumber}</Text>
             ) : null}
           </View>
 
