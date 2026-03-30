@@ -1,215 +1,220 @@
-// import { useState, useRef } from "react";
-// import { Camera, Image as ImageIcon, Loader2, Pill, Clock, AlertTriangle, CheckCircle2 } from "lucide-react";
-// import { Button } from "@/components/ui/button";
-// import { toast } from "sonner";
-// import { supabase } from "./components/integrations/supabase/client";
+import { useState } from 'react';
+import {
+  View, Text, TouchableOpacity, Image,
+  ScrollView, StyleSheet, ActivityIndicator, Alert
+} from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
+import { Pill, Camera, Image as ImageIcon, Clock, AlertTriangle, CheckCircle2 } from 'lucide-react-native';
+import { supabase } from '@/components/integrations/supabase/client';
 
-// interface MedicineResult {
-//   name: string;
-//   dosage: string;
-//   frequency: string;
-//   duration: string;
-//   advisory: string;
-// }
+interface MedicineResult {
+  name: string;
+  dosage: string;
+  frequency: string;
+  duration: string;
+  advisory: string;
+}
 
-// interface ScanResponse {
-//   medicines: MedicineResult[];
-//   generalAdvice: string;
-//   error?: string;
-// }
+interface ScanResponse {
+  medicines: MedicineResult[];
+  generalAdvice: string;
+  error?: string;
+}
 
-// function fileToBase64(file: File): Promise<string> {
-//   return new Promise((resolve, reject) => {
-//     const reader = new FileReader();
-//     reader.onload = () => {
-//       const result = reader.result as string;
-//       // Remove the data:image/...;base64, prefix
-//       const base64 = result.split(",")[1];
-//       resolve(base64);
-//     };
-//     reader.onerror = reject;
-//     reader.readAsDataURL(file);
-//   });
-// }
+export default function PrescriptionsPage() {
+  const [loading, setLoading] = useState(false);
+  const [results, setResults] = useState<ScanResponse | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
-// export default function PrescriptionsPage() {
-//   const [loading, setLoading] = useState(false);
-//   const [results, setResults] = useState<ScanResponse | null>(null);
-//   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-//   const fileInputRef = useRef<HTMLInputElement>(null);
-//   const cameraInputRef = useRef<HTMLInputElement>(null);
+  const handleImage = async (uri: string, base64: string, mimeType: string) => {
+    setPreviewUrl(uri);
+    setLoading(true);
+    setResults(null);
+    try {
+      const { data, error } = await supabase.functions.invoke('scan-prescription', {
+        body: { imageBase64: base64, mimeType },
+      });
+      if (error) throw new Error(error.message);
+      if (data?.error) throw new Error(data.error);
+      setResults(data as ScanResponse);
+      Alert.alert('Success', `Found ${data.medicines?.length || 0} medicine(s)!`);
+    } catch (e: any) {
+      Alert.alert('Error', e.message || 'Failed to scan prescription.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-//   const handleFile = async (file: File) => {
-//     const url = URL.createObjectURL(file);
-//     setPreviewUrl(url);
-//     setLoading(true);
-//     setResults(null);
+  const pickFromGallery = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      base64: true,
+      quality: 0.8,
+    });
+    if (!result.canceled && result.assets[0]) {
+      const asset = result.assets[0];
+      await handleImage(asset.uri, asset.base64!, asset.mimeType || 'image/jpeg');
+    }
+  };
 
-//     try {
-//       const imageBase64 = await fileToBase64(file);
+  const pickFromCamera = async () => {
+    const permission = await ImagePicker.requestCameraPermissionsAsync();
+    if (!permission.granted) {
+      Alert.alert('Permission needed', 'Camera permission is required.');
+      return;
+    }
+    const result = await ImagePicker.launchCameraAsync({
+      base64: true,
+      quality: 0.8,
+    });
+    if (!result.canceled && result.assets[0]) {
+      const asset = result.assets[0];
+      await handleImage(asset.uri, asset.base64!, asset.mimeType || 'image/jpeg');
+    }
+  };
 
-//       const { data, error } = await supabase.functions.invoke("scan-prescription", {
-//         body: { imageBase64, mimeType: file.type },
-//       });
+  return (
+    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+      <Text style={styles.title}>Scan Prescription</Text>
+      <Text style={styles.subtitle}>Upload or capture a prescription to extract medicine details</Text>
 
-//       if (error) {
-//         throw new Error(error.message || "Failed to scan prescription");
-//       }
+      {!previewUrl && !loading && (
+        <View style={styles.uploadCard}>
+          <View style={styles.iconBox}>
+            <Pill size={28} color="#fff" />
+          </View>
+          <Text style={styles.uploadTitle}>Upload Prescription</Text>
+          <Text style={styles.uploadSubtitle}>Take a photo or choose from gallery</Text>
+          <View style={styles.buttonRow}>
+            <TouchableOpacity style={styles.primaryButton} onPress={pickFromCamera}>
+              <Camera size={18} color="#fff" />
+              <Text style={styles.primaryButtonText}>Camera</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.outlineButton} onPress={pickFromGallery}>
+              <ImageIcon size={18} color="#2563EB" />
+              <Text style={styles.outlineButtonText}>Gallery</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
 
-//       if (data?.error) {
-//         throw new Error(data.error);
-//       }
+      {previewUrl && (
+        <View style={styles.previewCard}>
+          <Image source={{ uri: previewUrl }} style={styles.previewImage} />
+          {loading && (
+            <View style={styles.loadingRow}>
+              <ActivityIndicator color="#2563EB" />
+              <Text style={styles.loadingText}>Analyzing with AI...</Text>
+            </View>
+          )}
+        </View>
+      )}
 
-//       setResults(data as ScanResponse);
-//       toast.success(`Found ${data.medicines?.length || 0} medicine(s) in your prescription!`);
-//     } catch (e: any) {
-//       console.error("Scan error:", e);
-//       toast.error(e.message || "Failed to scan prescription. Please try again.");
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
+      {results && results.medicines && results.medicines.length > 0 && (
+        <View style={styles.resultsContainer}>
+          <View style={styles.foundRow}>
+            <CheckCircle2 size={20} color="#16a34a" />
+            <Text style={styles.foundText}>{results.medicines.length} Medicine(s) Found</Text>
+          </View>
 
-//   const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-//     const file = e.target.files?.[0];
-//     if (file) handleFile(file);
-//   };
+          {results.medicines.map((med, i) => (
+            <View key={i} style={styles.medicineCard}>
+              <View style={styles.medHeader}>
+                <View style={styles.medIconBox}>
+                  <Pill size={18} color="#fff" />
+                </View>
+                <View>
+                  <Text style={styles.medName}>{med.name}</Text>
+                  <Text style={styles.medDosage}>{med.dosage}</Text>
+                </View>
+              </View>
+              <View style={styles.gridRow}>
+                <View style={styles.gridItem}>
+                  <View style={styles.gridLabel}>
+                    <Clock size={12} color="#64748B" />
+                    <Text style={styles.gridLabelText}>FREQUENCY</Text>
+                  </View>
+                  <Text style={styles.gridValue}>{med.frequency}</Text>
+                </View>
+                <View style={styles.gridItem}>
+                  <View style={styles.gridLabel}>
+                    <Clock size={12} color="#64748B" />
+                    <Text style={styles.gridLabelText}>DURATION</Text>
+                  </View>
+                  <Text style={styles.gridValue}>{med.duration}</Text>
+                </View>
+              </View>
+              <View style={styles.advisoryBox}>
+                <AlertTriangle size={16} color="#d97706" />
+                <Text style={styles.advisoryText}>{med.advisory}</Text>
+              </View>
+            </View>
+          ))}
 
-//   return (
-//     <div className="px-5 pt-12 pb-6 space-y-6">
-//       <div>
-//         <h1 className="text-2xl font-bold text-foreground">Scan Prescription</h1>
-//         <p className="text-sm text-muted-foreground mt-1">
-//           Upload or capture a prescription image to extract medicine details
-//         </p>
-//       </div>
+          {results.generalAdvice ? (
+            <View style={styles.generalAdvice}>
+              <Text style={styles.generalAdviceTitle}>⚕️ General Advisory</Text>
+              <Text style={styles.generalAdviceText}>{results.generalAdvice}</Text>
+            </View>
+          ) : null}
 
-//       {/* Upload Area */}
-//       {!previewUrl && !loading && (
-//         <div className="glass-card rounded-2xl p-8 text-center space-y-4 border-2 border-dashed border-primary/20">
-//           <div className="w-16 h-16 rounded-2xl gradient-primary mx-auto flex items-center justify-center">
-//             <Pill size={28} className="text-primary-foreground" />
-//           </div>
-//           <div>
-//             <p className="font-semibold text-foreground">Upload Prescription</p>
-//             <p className="text-sm text-muted-foreground mt-1">Take a photo or choose from gallery</p>
-//           </div>
-//           <div className="flex gap-3 justify-center">
-//             <Button variant="hero" onClick={() => cameraInputRef.current?.click()}>
-//               <Camera size={18} />
-//               Camera
-//             </Button>
-//             <Button variant="outline" onClick={() => fileInputRef.current?.click()}>
-//               <ImageIcon size={18} />
-//               Gallery
-//             </Button>
-//           </div>
-//         </div>
-//       )}
+          <TouchableOpacity style={styles.outlineButton} onPress={() => { setResults(null); setPreviewUrl(null); }}>
+            <Text style={styles.outlineButtonText}>Scan Another Prescription</Text>
+          </TouchableOpacity>
+        </View>
+      )}
 
-//       <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={onFileChange} />
-//       <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={onFileChange} />
+      {results && (!results.medicines || results.medicines.length === 0) && (
+        <View style={styles.noResultCard}>
+          <AlertTriangle size={32} color="#d97706" />
+          <Text style={styles.noResultTitle}>No medicines detected</Text>
+          <Text style={styles.noResultText}>{results.generalAdvice || 'Please try a clearer image.'}</Text>
+          <TouchableOpacity style={styles.outlineButton} onPress={() => { setResults(null); setPreviewUrl(null); }}>
+            <Text style={styles.outlineButtonText}>Try Again</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+    </ScrollView>
+  );
+}
 
-//       {/* Image Preview */}
-//       {previewUrl && (
-//         <div className="glass-card rounded-2xl overflow-hidden">
-//           <img src={previewUrl} alt="Prescription" className="w-full h-48 object-cover" />
-//           {loading && (
-//             <div className="p-4 flex items-center justify-center gap-2 text-primary">
-//               <Loader2 size={20} className="animate-spin" />
-//               <span className="text-sm font-semibold">Analyzing prescription with AI...</span>
-//             </div>
-//           )}
-//         </div>
-//       )}
-
-//       {/* Results */}
-//       {results && results.medicines && results.medicines.length > 0 && (
-//         <div className="space-y-4 animate-slide-up">
-//           <div className="flex items-center gap-2">
-//             <CheckCircle2 size={20} className="text-success" />
-//             <h2 className="text-base font-bold text-foreground">
-//               {results.medicines.length} Medicine{results.medicines.length > 1 ? "s" : ""} Found
-//             </h2>
-//           </div>
-
-//           {results.medicines.map((med, i) => (
-//             <div key={i} className="glass-card rounded-xl p-4 space-y-3">
-//               <div className="flex items-start gap-3">
-//                 <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center shrink-0">
-//                   <Pill size={18} className="text-primary-foreground" />
-//                 </div>
-//                 <div className="flex-1">
-//                   <h3 className="font-bold text-foreground">{med.name}</h3>
-//                   <span className="text-sm text-primary font-semibold">{med.dosage}</span>
-//                 </div>
-//               </div>
-
-//               <div className="grid grid-cols-2 gap-2">
-//                 <div className="bg-muted rounded-lg p-2.5">
-//                   <div className="flex items-center gap-1.5 mb-1">
-//                     <Clock size={12} className="text-muted-foreground" />
-//                     <span className="text-[10px] text-muted-foreground font-semibold uppercase">Frequency</span>
-//                   </div>
-//                   <p className="text-xs font-semibold text-foreground">{med.frequency}</p>
-//                 </div>
-//                 <div className="bg-muted rounded-lg p-2.5">
-//                   <div className="flex items-center gap-1.5 mb-1">
-//                     <Clock size={12} className="text-muted-foreground" />
-//                     <span className="text-[10px] text-muted-foreground font-semibold uppercase">Duration</span>
-//                   </div>
-//                   <p className="text-xs font-semibold text-foreground">{med.duration}</p>
-//                 </div>
-//               </div>
-
-//               <div className="bg-warning/5 border border-warning/20 rounded-lg p-3 flex gap-2">
-//                 <AlertTriangle size={16} className="text-warning shrink-0 mt-0.5" />
-//                 <p className="text-xs text-foreground/80 leading-relaxed">{med.advisory}</p>
-//               </div>
-//             </div>
-//           ))}
-
-//           {/* General Advisory */}
-//           {results.generalAdvice && (
-//             <div className="gradient-accent rounded-xl p-4 space-y-2">
-//               <p className="font-bold text-accent-foreground text-sm">⚕️ General Advisory</p>
-//               <p className="text-xs text-accent-foreground/90 leading-relaxed">{results.generalAdvice}</p>
-//             </div>
-//           )}
-
-//           <Button
-//             variant="outline"
-//             className="w-full"
-//             onClick={() => {
-//               setResults(null);
-//               setPreviewUrl(null);
-//             }}
-//           >
-//             Scan Another Prescription
-//           </Button>
-//         </div>
-//       )}
-
-//       {/* No medicines found */}
-//       {results && (!results.medicines || results.medicines.length === 0) && (
-//         <div className="glass-card rounded-xl p-6 text-center space-y-2 animate-fade-in">
-//           <AlertTriangle size={32} className="mx-auto text-warning" />
-//           <p className="font-semibold text-foreground">No medicines detected</p>
-//           <p className="text-sm text-muted-foreground">
-//             {results.generalAdvice || "Please try uploading a clearer image of the prescription."}
-//           </p>
-//           <Button
-//             variant="outline"
-//             className="mt-3"
-//             onClick={() => {
-//               setResults(null);
-//               setPreviewUrl(null);
-//             }}
-//           >
-//             Try Again
-//           </Button>
-//         </div>
-//       )}
-//     </div>
-//   );
-// }
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: '#F8FAFC' },
+  content: { padding: 20, paddingBottom: 100 },
+  title: { fontSize: 24, fontWeight: '700', color: '#1E293B', marginBottom: 4 },
+  subtitle: { fontSize: 14, color: '#64748B', marginBottom: 20 },
+  uploadCard: { backgroundColor: '#fff', borderRadius: 20, padding: 32, alignItems: 'center', borderWidth: 2, borderColor: '#DBEAFE', borderStyle: 'dashed' },
+  iconBox: { width: 64, height: 64, borderRadius: 16, backgroundColor: '#2563EB', alignItems: 'center', justifyContent: 'center', marginBottom: 12 },
+  uploadTitle: { fontSize: 16, fontWeight: '600', color: '#1E293B' },
+  uploadSubtitle: { fontSize: 14, color: '#64748B', marginBottom: 16 },
+  buttonRow: { flexDirection: 'row', gap: 12 },
+  primaryButton: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#2563EB', borderRadius: 12, paddingHorizontal: 20, paddingVertical: 12 },
+  primaryButtonText: { color: '#fff', fontWeight: '600' },
+  outlineButton: { flexDirection: 'row', alignItems: 'center', gap: 8, borderWidth: 1, borderColor: '#2563EB', borderRadius: 12, paddingHorizontal: 20, paddingVertical: 12 },
+  outlineButtonText: { color: '#2563EB', fontWeight: '600' },
+  previewCard: { backgroundColor: '#fff', borderRadius: 20, overflow: 'hidden', marginBottom: 16 },
+  previewImage: { width: '100%', height: 200 },
+  loadingRow: { flexDirection: 'row', alignItems: 'center', gap: 8, padding: 16, justifyContent: 'center' },
+  loadingText: { color: '#2563EB', fontWeight: '600' },
+  resultsContainer: { gap: 12 },
+  foundRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  foundText: { fontSize: 16, fontWeight: '700', color: '#1E293B' },
+  medicineCard: { backgroundColor: '#fff', borderRadius: 16, padding: 16, gap: 12 },
+  medHeader: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  medIconBox: { width: 40, height: 40, borderRadius: 12, backgroundColor: '#2563EB', alignItems: 'center', justifyContent: 'center' },
+  medName: { fontSize: 16, fontWeight: '700', color: '#1E293B' },
+  medDosage: { fontSize: 14, color: '#2563EB', fontWeight: '600' },
+  gridRow: { flexDirection: 'row', gap: 8 },
+  gridItem: { flex: 1, backgroundColor: '#F1F5F9', borderRadius: 10, padding: 10 },
+  gridLabel: { flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 4 },
+  gridLabelText: { fontSize: 10, color: '#64748B', fontWeight: '600' },
+  gridValue: { fontSize: 12, fontWeight: '600', color: '#1E293B' },
+  advisoryBox: { flexDirection: 'row', gap: 8, backgroundColor: '#FFFBEB', borderWidth: 1, borderColor: '#FDE68A', borderRadius: 10, padding: 12 },
+  advisoryText: { fontSize: 12, color: '#1E293B', flex: 1 },
+  generalAdvice: { backgroundColor: '#EFF6FF', borderRadius: 16, padding: 16 },
+  generalAdviceTitle: { fontSize: 14, fontWeight: '700', color: '#1E293B', marginBottom: 4 },
+  generalAdviceText: { fontSize: 12, color: '#1E293B' },
+  noResultCard: { backgroundColor: '#fff', borderRadius: 16, padding: 24, alignItems: 'center', gap: 8 },
+  noResultTitle: { fontSize: 16, fontWeight: '600', color: '#1E293B' },
+  noResultText: { fontSize: 14, color: '#64748B', textAlign: 'center' },
+});
