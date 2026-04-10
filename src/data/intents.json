@@ -1,0 +1,343 @@
+{
+  "intents": [
+    {
+      "tag": "greeting",
+      "patterns": [
+        "Hi",
+        "Hello",
+        "Hey",
+        "Good morning",
+        "Good afternoon",
+        "Good evening",
+        "Greetings",
+        "How are you",
+        "What's up"
+      ],
+      "responses": [
+        "Hello! Welcome to your health companion. How can I help you today?",
+        "Hi there! I'm here to help you manage your medications and health. What do you need?",
+        "Hey! Ready to take care of your health? What would you like to do?"
+      ]
+    },
+    {
+      "tag": "medication_reminder",
+      "patterns": [
+        "What medicines do I need to take",
+        "When should I take my medicines",
+        "What's my medication schedule",
+        "Do I have any pending doses",
+        "When is my next medicine",
+        "Show me my medication reminders",
+        "What medicines am I on",
+        "My medication list",
+        "What should I take now"
+      ],
+      "responses": [
+        "Let me check your medication schedule. You can view your medicines on the Home page or in the Medication Reminders section.",
+        "Your medications are tracked in real-time. Go to the Home page to see today's reminders and mark doses as taken.",
+        "I'll show you all your prescribed medicines and their timings. Check the Home page for your complete medication schedule.",
+        "Your medicine list is available on the Home page with times and dosages clearly marked."
+      ]
+    },
+    {
+      "tag": "scan_prescription",
+      "patterns": [
+        "How do I add medicines",
+        "How do I scan a prescription",
+        "How to upload prescription",
+        "Add new medicine",
+        "Upload my prescription",
+        "Scan my medicine list",
+        "How to scan prescription images",
+        "Can I photograph my prescription",
+        "Extract medicines from image"
+      ],
+      "responses": [
+        "Go to the 'Scan Prescription' page. Tap Camera to take a photo or Gallery to upload an image of your prescription. The AI will extract all medicines, dosages, and instructions.",
+        "It's easy! Visit the Prescriptions page, choose Camera or Gallery, and upload your prescription image. We'll automatically extract all the medicine details.",
+        "Use the Scan Prescription feature - just tap the camera icon or upload an image. Our AI will read the prescription and add all medicines to your tracker.",
+        "You can scan prescriptions by visiting the Prescriptions page and uploading a photo. All medicine details will be extracted automatically."
+      ]
+    },
+    {
+      "tag": "lab_reports",
+      "patterns": [
+        "How do I upload lab reports",
+        "Can I store lab reports",
+        "Upload my lab test results",
+        "Extract lab report data",
+        "How to upload blood test results",
+        "Can I scan lab documents",
+        "Store my medical reports",
+        "Upload health test results",
+        "Where to save lab reports"
+      ],
+      "responses": [
+        "Visit the MediLocker page to upload your lab reports. You can upload PDF or image files. The AI will extract patient info, test results, and reference ranges automatically.",
+        "The MediLocker feature lets you securely store and analyze lab reports. Upload PDFs or images, and we'll extract all the important data for you.",
+        "Go to MediLocker to upload your lab reports. We support PDF, JPEG, PNG files up to 10MB. All your test results will be organized and analyzed.",
+        "You can upload lab reports in MediLocker. Our AI will extract patient information, test results, collection dates, and provide health insights."
+      ]
+    },
+    {
+      "tag": "track_meals",
+      "patterns": [
+        "How do I track meals",
+        "Track my nutrition",
+        "Log my food intake",
+        "See meal nutrition info",
+        "What's my calorie intake",
+        "View nutrition facts",
+        "Track daily calories",
+        "Log my meals",
+        "What did I eat today"
+      ],
+      "responses": [
+        "Visit the Meal Tracker page to see all your meals and nutrition information. It shows calories, protein, carbs, and fats for each meal.",
+        "The Meal Tracker displays your daily meals with complete nutrition breakdown. You can see today's total calorie intake and track it against your goal.",
+        "Go to the Meals page to track your nutrition. Each meal shows detailed macros - calories, protein, carbs, and fats.",
+        "Your meal tracking is available on the Meals page. See your daily nutrition summary and ensure you're meeting your health goals."
+      ]
+    },
+    {
+      "tag": "adherence_tracking",
+      "patterns": [
+        "How do I mark medicine as taken",
+        "Mark my dose as taken",
+        "Confirm I took my medicine",
+        "How to track adherence",
+        "Show my medication compliance",
+        "What's my adherence percentage",
+        "Check my medication history"
+      ],
+      "responses": [
+        "On the Home page, simply tap 'Mark Taken' on any medicine to record that you've taken it. Your adherence percentage updates automatically.",
+        "Every medicine on the Home page has a 'Mark Taken' button. Tap it to confirm you've taken the dose. Your daily adherence percentage is tracked at the top.",
+        "You can mark medicines as taken directly from the Home page reminders. The app tracks your adherence percentage and shows your compliance status.",
+        "Simply tap the checkbox or 'Mark Taken' button next to each medicine. Your adherence is calculated and displayed as a percentage on the Home page."
+      ]
+    },
+    {
+      "tag": "medicine_details",
+      "patterns": [
+        "What are the side effects",
+        "Tell me about this medicine",
+        "Medicine information",
+        "What is this drug for",
+        "Medicine warnings",
+        "What should I know about my medicine",
+        "Medicine precautions",
+        "Is there an alternative medicine"
+      ],
+      "responses": [
+        "When you scan a prescription, we extract and display all medicine details including usage instructions and precautions. Scroll through the extracted information.",
+        "Each medicine shows its purpose, dosage, frequency, and important advisories. This information is extracted from your prescription automatically.",
+        "For detailed medicine information, check the extracted prescription data. It includes warnings, precautions, and how to take the medicine.",
+        "Visit your prescription details to see complete information about each medicine including side effects and warnings from your prescription."
+      ]
+    },
+    {
+      "tag": "missed_doses",
+      "patterns": [
+        "I missed a dose",
+        "What if I forgot my medicine",
+        "Missed medicine alert",
+        "How to handle missed doses",
+        "I forgot to take my medicine",
+        "Can I take a missed dose",
+        "Late medicine intake"
+      ],
+      "responses": [
+        "If you missed a dose, mark it on the Home page. The app will flag it so you can keep track. For medical advice on whether to take a late dose, consult your doctor.",
+        "The Home page shows missed doses. You can update your adherence status even for past times. Always consult your doctor about late doses.",
+        "Mark any missed doses in the medication reminders section. The app tracks them for your health record and doctor consultation.",
+        "You can log missed doses anytime. The Home page shows your medication status - mark what you've taken or missed for accurate health tracking."
+      ]
+    },
+    {
+      "tag": "test_results",
+      "patterns": [
+        "What do my test results mean",
+        "Are my lab values normal",
+        "Explain my test results",
+        "Health insights from labs",
+        "Lab results interpretation",
+        "Are my results good",
+        "What about high values"
+      ],
+      "responses": [
+        "After uploading a lab report in MediLocker, the app displays your test results with status indicators - Normal, High, Low, or Abnormal. Consult your doctor for interpretation.",
+        "Lab results show reference ranges and status. Green indicates normal, red indicates abnormal. Always discuss results with your physician for medical advice.",
+        "Your lab values are shown with color-coded status. The app extracts reference ranges so you can compare your results. Ask your doctor what they mean for your health.",
+        "Each test result displays the value, reference range, and status. Refer to your doctor for medical interpretation and advice on abnormal results."
+      ]
+    },
+    {
+      "tag": "data_privacy",
+      "patterns": [
+        "Is my data secure",
+        "How is my information stored",
+        "Privacy policy",
+        "Data encryption",
+        "How do you protect my health data",
+        "Is this app HIPAA compliant",
+        "Can I delete my data"
+      ],
+      "responses": [
+        "Your health data is stored securely using Supabase with encryption. We take privacy seriously and follow health data protection standards.",
+        "All your medical information is encrypted and stored securely. Your data is never shared without your consent.",
+        "We use industry-standard encryption to protect your health records. Your privacy is our top priority.",
+        "Your data is stored in a secure, encrypted database. We follow strict privacy standards to protect your health information."
+      ]
+    },
+    {
+      "tag": "app_features",
+      "patterns": [
+        "What can this app do",
+        "What are the features",
+        "Tell me about the app",
+        "What's available in this app",
+        "App capabilities",
+        "How does this app work"
+      ],
+      "responses": [
+        "This app helps you: Scan prescriptions to add medicines, track medication adherence, upload and analyze lab reports, track meals and nutrition, and monitor your health in one place.",
+        "Features include: Real-time medication reminders, prescription scanning with AI, lab report analysis, meal tracking, adherence monitoring, and health insights.",
+        "You can scan prescriptions, track medicines, upload lab reports, log meals, monitor adherence, and get personalized health insights - all in one app.",
+        "The app provides prescription scanning, medication tracking, lab report storage, nutrition tracking, adherence monitoring, and health analytics."
+      ]
+    },
+    {
+      "tag": "set_reminders",
+      "patterns": [
+        "How do reminders work",
+        "Do I get notifications",
+        "Will I be reminded",
+        "How to get medicine reminders",
+        "Set medication alerts",
+        "Enable notifications"
+      ],
+      "responses": [
+        "Your medicines appear on the Home page at their scheduled times. The app displays reminders based on the timings from your prescription.",
+        "When you scan a prescription, the medicine schedules are added automatically. You'll see reminders on the Home page for each dose.",
+        "Reminders are displayed on the Home page when it's time to take your medicines. The timing comes from your scanned prescription.",
+        "Your medication schedule is extracted from your prescription and displayed on the Home page with timing for each dose."
+      ]
+    },
+    {
+      "tag": "health_insights",
+      "patterns": [
+        "What are my health insights",
+        "Show me health statistics",
+        "My health summary",
+        "How is my health trending",
+        "Health analytics",
+        "What do my health metrics mean"
+      ],
+      "responses": [
+        "The Home page shows your health insights including adherence percentage, daily calorie intake, and medication compliance metrics.",
+        "Your health dashboard displays adherence percentage, nutrition summary, and wellness metrics to help you stay on track.",
+        "Check the Home page for health insights: adherence rate, today's calorie intake, and medication compliance status.",
+        "Health insights include your medication adherence percentage, daily nutrition tracking, and overall wellness metrics."
+      ]
+    },
+    {
+      "tag": "export_data",
+      "patterns": [
+        "Can I export my data",
+        "Download my health records",
+        "Export medication history",
+        "Share my reports",
+        "Get a copy of my data"
+      ],
+      "responses": [
+        "Currently, you can view all your data in the app. Contact support if you need to export your health records for sharing with your doctor.",
+        "Your health data is organized in the app for easy viewing. You can take screenshots or contact us for data export options.",
+        "All your data is stored and accessible in the app. We're working on export features for easy sharing with healthcare providers.",
+        "You can view all your medical information in the app. Support can help with exporting specific records or reports."
+      ]
+    },
+    {
+      "tag": "help_support",
+      "patterns": [
+        "I need help",
+        "How do I contact support",
+        "Where's the help section",
+        "I have a problem",
+        "App not working",
+        "Technical support",
+        "Report a bug"
+      ],
+      "responses": [
+        "Need help? Contact our support team or check the app's help section for detailed guides on using each feature.",
+        "If you're having issues, our support team is here to help. Report bugs or issues through the help section.",
+        "Visit the help section for FAQs and troubleshooting. For specific issues, contact our support team.",
+        "Our support team is ready to help! Check the help section or reach out through the app for technical assistance."
+      ]
+    },
+    {
+      "tag": "update_information",
+      "patterns": [
+        "How do I update my medicines",
+        "Edit my prescription",
+        "Delete a medicine",
+        "Change medicine dosage",
+        "Update medication information"
+      ],
+      "responses": [
+        "To update medicines, you can scan a new prescription which will replace the old information. This ensures your records are always current.",
+        "Scan an updated prescription to refresh your medicine list. Each new scan updates your complete medication profile.",
+        "Simply scan a new prescription to update your medicines. The app will extract the latest information and update your reminders.",
+        "You can update medicines by scanning a new or updated prescription. This will replace your current medication information."
+      ]
+    },
+    {
+      "tag": "multiple_prescriptions",
+      "patterns": [
+        "Can I add multiple prescriptions",
+        "How many prescriptions can I scan",
+        "Can I have multiple doctors",
+        "Add multiple medicines"
+      ],
+      "responses": [
+        "Yes! You can scan multiple prescriptions from different doctors. Each scan adds or updates your complete medication profile.",
+        "The app supports multiple prescriptions. You can scan as many as you need and they'll all be organized in your medicine list.",
+        "Feel free to scan multiple prescriptions. All medicines will be tracked and organized on your Home page.",
+        "You can manage medicines from multiple prescriptions and doctors. Scan each one and they'll all appear in your medication tracker."
+      ]
+    },
+    {
+      "tag": "family_accounts",
+      "patterns": [
+        "Can I track family members",
+        "Family account",
+        "Track someone else",
+        "Multiple users",
+        "Caregiver mode"
+      ],
+      "responses": [
+        "Currently, each person needs their own account. You can manage your own health or your dependent's if they share their account with you.",
+        "The app is designed for individual users. For family members, each person can create their own account to track their medicines.",
+        "Each family member can have their own account to track their medications and health independently.",
+        "Set up separate accounts for family members. Each person can track their own medications and health data securely."
+      ]
+    },
+    {
+      "tag": "goodbye",
+      "patterns": [
+        "Goodbye",
+        "Bye",
+        "See you later",
+        "Farewell",
+        "That's all",
+        "Thanks"
+      ],
+      "responses": [
+        "Take care of yourself! Remember to take your medicines on time. See you next time!",
+        "Goodbye! Stay healthy and don't forget your medication reminders!",
+        "Thanks for using the app. Keep up with your health routine!",
+        "See you soon! Keep tracking your health!"
+      ]
+    }
+  ]
+}
