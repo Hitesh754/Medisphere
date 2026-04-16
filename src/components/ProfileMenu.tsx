@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
-import { User, Bell, Sun, Moon, FileText, Check, Download, Loader as Loader2 } from "lucide-react";
+import { User, Bell, Sun, Moon, FileText, Check, Download, Loader as Loader2, LogOut } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { observeAuthState, signOutUser, type User as FirebaseUser } from "@/auth";
 import {
   getNotifications,
   markNotificationRead,
@@ -11,13 +12,13 @@ import {
 import { generatePortfolioPDF } from "@/lib/generatePortfolio";
 import { toast } from "sonner";
 
-const mockUser = { name: "John" };
-
 export default function ProfileMenu() {
+  const [user, setUser] = useState<FirebaseUser | null>(null);
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [dark, setDark] = useState(() => document.documentElement.classList.contains("dark"));
   const [generatingPDF, setGeneratingPDF] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const reload = useCallback(() => {
     setNotifications(getNotifications());
@@ -29,6 +30,14 @@ export default function ProfileMenu() {
     window.addEventListener("notifications-updated", reload);
     return () => window.removeEventListener("notifications-updated", reload);
   }, [reload]);
+
+  useEffect(() => {
+    const unsubscribe = observeAuthState((nextUser) => {
+      setUser(nextUser);
+    });
+
+    return unsubscribe;
+  }, []);
 
   const toggleTheme = () => {
     const next = !dark;
@@ -68,6 +77,21 @@ export default function ProfileMenu() {
     }
   };
 
+  const handleLogout = async () => {
+    setIsLoggingOut(true);
+    try {
+      await signOutUser();
+      toast.success("Logged out successfully");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Failed to log out";
+      toast.error(message);
+    } finally {
+      setIsLoggingOut(false);
+    }
+  };
+
+  const displayName = user?.displayName?.trim() || user?.email?.split("@")[0] || "User";
+
   const timeAgo = (ts: string) => {
     const diff = Date.now() - new Date(ts).getTime();
     const mins = Math.floor(diff / 60000);
@@ -94,8 +118,28 @@ export default function ProfileMenu() {
         
         
         <div className="px-4 py-3 border-b border-border bg-muted/30">
-          <p className="text-sm font-bold text-foreground">{mockUser.name}</p>
-          <p className="text-xs text-muted-foreground">Patient Profile</p>
+          <p className="text-sm font-bold text-foreground">{displayName}</p>
+          <p className="text-xs text-muted-foreground">{user?.email || "Patient Profile"}</p>
+        </div>
+
+        <div className="px-4 py-3 border-b border-border">
+          <button
+            onClick={handleLogout}
+            disabled={isLoggingOut}
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg bg-destructive/5 hover:bg-destructive/10 border border-destructive/20 transition-all disabled:opacity-50"
+          >
+            {isLoggingOut ? (
+              <Loader2 size={18} className="text-destructive animate-spin" />
+            ) : (
+              <LogOut size={18} className="text-destructive" />
+            )}
+            <div className="flex-1 text-left">
+              <p className="text-sm font-semibold text-foreground">Logout</p>
+              <p className="text-[10px] text-muted-foreground">
+                {isLoggingOut ? "Signing you out..." : "Sign out from this device"}
+              </p>
+            </div>
+          </button>
         </div>
 
         

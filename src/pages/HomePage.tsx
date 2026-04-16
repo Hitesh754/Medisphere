@@ -18,9 +18,8 @@ import {
   type SavedMedicine,
 } from "@/lib/medicineStore";
 import { useMedicineNotifications } from "@/hooks/useMedicineNotifications";
+import { observeAuthState, type User } from "@/auth";
 import { toast } from "sonner";
-
-const mockUser = { name: "John" };
 
 
 function useCountUp(target: number, duration = 1100) {
@@ -60,6 +59,7 @@ export default function HomePage() {
   const [medicines, setMedicines] = useState<SavedMedicine[]>([]);
   const [, setTick] = useState(0);
   const [mounted, setMounted] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
 
   useMedicineNotifications();
 
@@ -76,6 +76,19 @@ export default function HomePage() {
     window.addEventListener("adherence-updated", reload);
     return () => { clearTimeout(t); window.removeEventListener("medicines-updated", reload); window.removeEventListener("adherence-updated", reload); };
   }, [reload]);
+
+  useEffect(() => {
+    const unsubscribe = observeAuthState((nextUser) => {
+      setUser(nextUser);
+    });
+
+    return unsubscribe;
+  }, []);
+
+  const userName =
+    user?.displayName?.trim() ||
+    user?.email?.split("@")[0] ||
+    "there";
 
   const now = new Date();
   const currentMinutes = now.getHours() * 60 + now.getMinutes();
@@ -464,7 +477,7 @@ export default function HomePage() {
               <div>
                 <div className="hp-greeting">
                   {greeting},<br />
-                  <span>{mockUser.name}</span> 👋
+                  <span>{userName}</span> 👋
                 </div>
                 <div className="hp-subline">How are you feeling today?</div>
               </div>
