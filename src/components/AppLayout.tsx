@@ -12,6 +12,15 @@ const tabs = [
 export default function AppLayout() {
   return (
     <div className="min-h-screen bg-background flex flex-col max-w-md mx-auto relative">
+      <header className="flex items-center justify-between px-4 pt-4 pb-2">
+        <div className="flex items-center gap-3">
+          <div>
+            <p className="text-sm font-bold text-foreground">MediSphere</p>
+            <p className="text-xs text-muted-foreground">Your health companion</p>
+          </div>
+        </div>
+      </header>
+
       <div className="flex-1 overflow-y-auto pb-20">
         <Outlet />
       </div>

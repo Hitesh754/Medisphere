@@ -1,14 +1,8 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { signUpWithEmail } from "@/auth";
+import AuthFrame from "@/components/AuthFrame";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
@@ -44,87 +38,88 @@ export default function SignUpPage() {
   };
 
   return (
-    <main className="min-h-screen bg-background px-4 py-10">
-      <div className="mx-auto flex min-h-[80vh] w-full max-w-md items-center justify-center">
-        <Card className="w-full">
-          <CardHeader>
-            <CardTitle>Create account</CardTitle>
-            <CardDescription>Sign up to start using MediSphere.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSignUp} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="signup-name">Full name</Label>
-                <Input
-                  id="signup-name"
-                  type="text"
-                  value={name}
-                  onChange={(event) => setName(event.target.value)}
-                  required
-                  autoComplete="name"
-                  placeholder="John Doe"
-                />
-              </div>
+    <AuthFrame
+      badge="Create account"
+      title="Create account"
+      description="Set up your profile in a few steps."
+      formTitle="Sign up"
+      formDescription="Add your details to create an account."
+      footer={(
+        <p className="text-center text-sm text-slate-600">
+          Already have an account?{" "}
+          <Link to="/signin" className="font-semibold text-blue-700 underline-offset-4 hover:underline">
+            Sign in
+          </Link>
+        </p>
+      )}
+    >
+      <form onSubmit={handleSignUp} className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="signup-name">Full name</Label>
+          <Input
+            id="signup-name"
+            type="text"
+            value={name}
+            onChange={(event) => setName(event.target.value)}
+            required
+            autoComplete="name"
+            placeholder="John Doe"
+            className="h-12 rounded-2xl border-slate-200 bg-white/90 shadow-sm transition-all placeholder:text-slate-400 focus-visible:border-blue-500 focus-visible:ring-blue-500/20"
+          />
+        </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="signup-email">Email</Label>
-                <Input
-                  id="signup-email"
-                  type="email"
-                  value={email}
-                  onChange={(event) => setEmail(event.target.value)}
-                  required
-                  autoComplete="email"
-                  placeholder="you@example.com"
-                />
-              </div>
+        <div className="space-y-2">
+          <Label htmlFor="signup-email">Email</Label>
+          <Input
+            id="signup-email"
+            type="email"
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+            required
+            autoComplete="email"
+            placeholder="you@example.com"
+            className="h-12 rounded-2xl border-slate-200 bg-white/90 shadow-sm transition-all placeholder:text-slate-400 focus-visible:border-blue-500 focus-visible:ring-blue-500/20"
+          />
+        </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="signup-password">Password</Label>
-                <Input
-                  id="signup-password"
-                  type="password"
-                  value={password}
-                  onChange={(event) => setPassword(event.target.value)}
-                  required
-                  autoComplete="new-password"
-                  placeholder="Create a password"
-                />
-              </div>
+        <div className="space-y-2">
+          <Label htmlFor="signup-password">Password</Label>
+          <Input
+            id="signup-password"
+            type="password"
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+            required
+            autoComplete="new-password"
+            placeholder="Create a password"
+            className="h-12 rounded-2xl border-slate-200 bg-white/90 shadow-sm transition-all placeholder:text-slate-400 focus-visible:border-blue-500 focus-visible:ring-blue-500/20"
+          />
+        </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="signup-confirm-password">Confirm password</Label>
-                <Input
-                  id="signup-confirm-password"
-                  type="password"
-                  value={confirmPassword}
-                  onChange={(event) => setConfirmPassword(event.target.value)}
-                  required
-                  autoComplete="new-password"
-                  placeholder="Repeat your password"
-                />
-              </div>
+        <div className="space-y-2">
+          <Label htmlFor="signup-confirm-password">Confirm password</Label>
+          <Input
+            id="signup-confirm-password"
+            type="password"
+            value={confirmPassword}
+            onChange={(event) => setConfirmPassword(event.target.value)}
+            required
+            autoComplete="new-password"
+            placeholder="Repeat your password"
+            className="h-12 rounded-2xl border-slate-200 bg-white/90 shadow-sm transition-all placeholder:text-slate-400 focus-visible:border-blue-500 focus-visible:ring-blue-500/20"
+          />
+        </div>
 
-              {errorMessage ? (
-                <p className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
-                  {errorMessage}
-                </p>
-              ) : null}
+        {errorMessage ? (
+          <p className="rounded-2xl border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+            {errorMessage}
+          </p>
+        ) : null}
 
-              <Button type="submit" className="w-full" disabled={isSubmitting}>
-                {isSubmitting ? "Creating account..." : "Create account"}
-              </Button>
-            </form>
-
-            <p className="mt-4 text-center text-sm text-muted-foreground">
-              Already have an account?{" "}
-              <Link to="/signin" className="text-primary underline-offset-4 hover:underline">
-                Sign in
-              </Link>
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-    </main>
+        <Button type="submit" className="h-12 w-full rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 shadow-[0_16px_30px_rgba(37,99,235,0.24)] transition-all hover:shadow-[0_20px_36px_rgba(37,99,235,0.30)]" disabled={isSubmitting}>
+          {isSubmitting ? "Creating account..." : "Create account"}
+        </Button>
+      </form>
+    </AuthFrame>
   );
 }
