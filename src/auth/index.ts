@@ -3,6 +3,7 @@ export {
 	firebaseApp,
 	googleAuthProvider,
 	observeAuthState,
+	signInWithGoogle,
 	signInWithEmail,
 	signOutUser,
 	signUpWithEmail,

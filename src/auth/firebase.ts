@@ -4,6 +4,7 @@ import {
   getAuth,
   GoogleAuthProvider,
   onAuthStateChanged,
+  signInWithPopup,
   signInWithEmailAndPassword,
   signOut,
   updateProfile,
@@ -49,6 +50,11 @@ export function observeAuthState(callback: (user: User | null) => void) {
 
 export async function signInWithEmail(email: string, password: string) {
   const credential = await signInWithEmailAndPassword(auth, email, password);
+  return credential.user;
+}
+
+export async function signInWithGoogle() {
+  const credential = await signInWithPopup(auth, googleAuthProvider);
   return credential.user;
 }
 

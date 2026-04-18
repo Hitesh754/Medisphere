@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { signInWithEmail } from "@/auth";
+import { signInWithEmail, signInWithGoogle } from "@/auth";
 import AuthFrame from "@/components/AuthFrame";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,6 +29,21 @@ export default function SignInPage() {
     }
   };
 
+  const handleGoogleSignIn = async () => {
+    setErrorMessage("");
+    setIsSubmitting(true);
+
+    try {
+      await signInWithGoogle();
+      navigate("/", { replace: true });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Google sign in failed";
+      setErrorMessage(message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <AuthFrame
       badge="Sign in"
@@ -45,7 +60,27 @@ export default function SignInPage() {
         </p>
       )}
     >
-      <form onSubmit={handleSignIn} className="space-y-4">
+      <div className="space-y-4">
+        <Button
+          type="button"
+          variant="outline"
+          className="h-12 w-full rounded-2xl border-slate-200 bg-white/90"
+          onClick={handleGoogleSignIn}
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? "Please wait..." : "Continue with Google"}
+        </Button>
+
+        <div className="relative py-1">
+          <div className="absolute inset-0 flex items-center" aria-hidden>
+            <span className="w-full border-t border-slate-200" />
+          </div>
+          <div className="relative flex justify-center text-xs uppercase">
+            <span className="bg-white px-2 text-slate-500">or sign in with email</span>
+          </div>
+        </div>
+
+        <form onSubmit={handleSignIn} className="space-y-4">
         <div className="space-y-2">
           <Label htmlFor="signin-email">Email</Label>
           <Input
@@ -83,7 +118,8 @@ export default function SignInPage() {
         <Button type="submit" className="h-12 w-full rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 shadow-[0_16px_30px_rgba(37,99,235,0.24)] transition-all hover:shadow-[0_20px_36px_rgba(37,99,235,0.30)]" disabled={isSubmitting}>
           {isSubmitting ? "Signing in..." : "Sign in"}
         </Button>
-      </form>
+        </form>
+      </div>
     </AuthFrame>
   );
 }
