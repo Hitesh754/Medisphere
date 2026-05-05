@@ -1,11 +1,12 @@
 import { NavLink, Outlet } from "react-router-dom";
-import { Home, Pill, FolderLock, UtensilsCrossed } from "lucide-react";
+import { Home, Pill, FolderLock, UtensilsCrossed, FileText } from "lucide-react";
 import ChatBot from "./ChatBot";
 
 const tabs = [
   { to: "/", icon: Home, label: "Home" },
   { to: "/prescriptions", icon: Pill, label: "Prescriptions" },
   { to: "/medilocker", icon: FolderLock, label: "MediLocker" },
+  { to: "/report-analyzer", icon: FileText, label: "Report Analyzer" },
   { to: "/meals", icon: UtensilsCrossed, label: "Meals" },
 ];
 

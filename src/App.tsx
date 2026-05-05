@@ -10,6 +10,7 @@ import AppLayout from "./components/AppLayout";
 import HomePage from "./pages/HomePage";
 import PrescriptionsPage from "./pages/PrescriptionsPage";
 import MediLockerPage from "./pages/MediLockerPage";
+import ReportAnalyzerPage from "./pages/ReportAnalyzerPage";
 import MealsPage from "./pages/MealsPage";
 import InstallPage from "./pages/InstallPage";
 import AppointmentPage from "./pages/AppointmentPage";
@@ -62,6 +63,7 @@ function AppInner() {
           <Route path="/" element={<HomePage />} />
           <Route path="/prescriptions" element={<PrescriptionsPage />} />
           <Route path="/medilocker" element={<MediLockerPage />} />
+          <Route path="/report-analyzer" element={<ReportAnalyzerPage />} />
           <Route path="/meals" element={<MealsPage />} />
           <Route path="/appointment" element={<AppointmentPage />} />
           <Route path="/install" element={<InstallPage />} />
